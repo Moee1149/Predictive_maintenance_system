@@ -1,0 +1,69 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProjectOverview } from "@/components/project-overview"
+import { ModelPerformance } from "@/components/model-perfomance"
+import { RealTimeMonitoring } from "@/components/real-time-monitoring"
+import { TrendsVisualization } from "@/components/trend-visualization"
+import { MaintenanceInsights } from "@/components/maintenance-insights"
+import { AdvancedAnalytics } from "@/components/advanced-analytics"
+import { Activity, BarChart3, TrendingUp, Wrench, Brain } from "lucide-react"
+
+export default function App() {
+  return  (
+  <div className="min-h-screen dashboard-gradient">
+      <div className="mx-auto max-w-7xl p-8 space-y-10">
+        <ProjectOverview />
+        <Tabs defaultValue="monitoring" className="space-y-8">
+          <TabsList className="glass-tabs grid w-full grid-cols-5 p-2 h-auto gap-2">
+            <TabsTrigger value="monitoring" className="tab-trigger flex items-center justify-center">
+              <Activity className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline font-medium">Real-Time</span>
+              <span className="sm:hidden font-medium">Live</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="tab-trigger flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline font-medium">Performance</span>
+              <span className="sm:hidden font-medium">Perf</span>
+            </TabsTrigger>
+            <TabsTrigger value="trends" className="tab-trigger flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline font-medium">Trends</span>
+              <span className="sm:hidden font-medium">Trends</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="tab-trigger flex items-center justify-center">
+              <Wrench className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline font-medium">Maintenance</span>
+              <span className="sm:hidden font-medium">Maint</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="tab-trigger flex items-center justify-center">
+              <Brain className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline font-medium">Analytics</span>
+              <span className="sm:hidden font-medium">AI</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="tab-content-container">
+            <TabsContent value="monitoring" className="space-y-6 animate-in fade-in-50 duration-200">
+              <RealTimeMonitoring />
+            </TabsContent>
+
+            <TabsContent value="performance" className="space-y-6 animate-in fade-in-50 duration-200">
+              <ModelPerformance />
+            </TabsContent>
+
+            <TabsContent value="trends" className="space-y-6 animate-in fade-in-50 duration-200">
+              <TrendsVisualization />
+            </TabsContent>
+
+            <TabsContent value="maintenance" className="space-y-6 animate-in fade-in-50 duration-200">
+              <MaintenanceInsights />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6 animate-in fade-in-50 duration-200">
+              <AdvancedAnalytics />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+    </div>
+  )
+}
