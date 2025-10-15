@@ -1,5 +1,5 @@
 venv/
-app/__pycache__
+__pycache__
 model_components_20250926_023409.pkl
 model_results.json
 trained_model_20250926_023409.keras
