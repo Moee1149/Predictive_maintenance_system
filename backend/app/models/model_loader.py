@@ -1,9 +1,8 @@
-import numpy as np
-import pprint
 import pickle
+
+import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
-from app.config.config import Config
 
 
 class LoadModel:
@@ -11,10 +10,8 @@ class LoadModel:
     def load_dataset(dataset_path):
         """
         Load and prepare the bearing dataset
-
         Args:
             dataset_path: Path to the pickle file containing the dataset
-
         Returns:
             dict with: dataset (DataFrame), scaler, target_type, feature_names
         """
@@ -205,62 +202,112 @@ class LoadModel:
         }
 
     @staticmethod
-    def run_single_prediction(dataset_path, model_path, components_path, row_index=0):
+    def get_row_with_sensor_data(dataset, row_index):
         """
-        Complete pipeline to run a single prediction
+        Get a single row with all sensor data needed for frontend visualization
+
+        Args:
+            dataset: DataFrame containing the data
+            row_index: Index of the row to retrieve
+
+        Returns:
+            dict with sensor data and features
+        """
+        row_data = dataset.iloc[row_index]
+
+        # Extract sensor columns (adjust column names based on your actual dataset)
+        sensor_data = {
+            # Vibration RMS values
+            "vibration_x_rms": float(row_data["vibration_x_rms"]),
+            "vibration_y_rms": float(row_data["vibration_y_rms"]),
+            "combined_vib_rms": float(row_data["combined_vib_rms"]),
+            # Peak values
+            "vibration_x_peak": float(row_data["vibration_x_peak"]),
+            "vibration_y_peak": float(row_data["vibration_y_peak"]),
+            # Temperature
+            "temperature_bearing_mean": float(row_data["temperature_bearing_mean"]),
+            "temperature_atmospheric_mean": float(
+                row_data["temperature_atmospheric_mean"]
+            ),
+            # Additional useful features
+            "vibration_x_kurtosis": float(row_data["vibration_x_kurtosis"]),
+            "vibration_y_kurtosis": float(row_data["vibration_y_kurtosis"]),
+            "vibration_x_crest_factor": float(row_data["vibration_x_crest_factor"]),
+            "vibration_y_crest_factor": float(row_data["vibration_y_crest_factor"]),
+        }
+
+        return sensor_data
+
+    @staticmethod
+    def batch_predict_with_interval(
+        dataset_path, model_path, components_path, start_index=0, step_size=10
+    ):
+        """
+        Generator function for batch predictions with intervals
 
         Args:
             dataset_path: Path to dataset pickle file
             model_path: Path to model file
             components_path: Path to components pickle file
-            row_index: Which row to predict (default: 0 for first row)
-        """
-        print("🚀 Starting Single Prediction Pipeline\n")
+            start_index: Starting row index
+            step_size: Number of rows to skip between predictions
 
-        # Step 1: Load dataset
+        Yields:
+            dict with prediction results and sensor data
+        """
+        print("🚀 Initializing Batch Prediction Pipeline\n")
+
+        # Load once
         data_dict = LoadModel.load_dataset(dataset_path)
         dataset = data_dict["dataset"]
-        scaler = data_dict["scaler"]
         target_type = data_dict["target_type"]
         feature_names = data_dict["feature_names"]
 
-        # Step 2: Load model
         model_dict = LoadModel.load_model_components(model_path, components_path)
         model = model_dict["model"]
         model_architecture = model_dict["model_architecture"]
 
-        # Step 3: Get single row
-        row_dict = LoadModel.get_single_row(dataset, row_index)
-        features = row_dict["features"]
-        actual_target = row_dict["actual_target"]
-        actual_health_status = row_dict["actual_health_status"]
+        total_rows = len(dataset)
+        current_index = start_index
 
-        # Step 4: Prepare input
-        print("\n🔧 Preparing model input...")
-        model_input = LoadModel.prepare_model_input(
-            features, feature_names, model_architecture
-        )
+        print(f"📊 Total rows: {total_rows}")
+        print(f"📍 Starting from index: {start_index}")
+        print(f"⏭️  Step size: {step_size}\n")
 
-        # Step 5: Make prediction
-        print("\n🤖 Making prediction...")
-        prediction = LoadModel.make_prediction(model, model_input)
+        while current_index < total_rows:
+            # Get sensor data
+            sensor_data = LoadModel.get_row_with_sensor_data(dataset, current_index)
 
-        # Step 6: Convert to health metrics
-        print("\n📊 Converting to health metrics...")
-        metrics = LoadModel.convert_to_health_metrics(
-            prediction, target_type, actual_target
-        )
+            # Get features for prediction
+            row_dict = LoadModel.get_single_row(dataset, current_index)
+            features = row_dict["features"]
+            actual_target = row_dict["actual_target"]
 
-        # Step 7: Display results
-        # LoadModel.display_results(metrics, actual_health_status)
+            # Prepare and predict
+            model_input = LoadModel.prepare_model_input(
+                features, feature_names, model_architecture
+            )
+            prediction = LoadModel.make_prediction(model, model_input)
 
-        return metrics
+            # Convert to health metrics
+            metrics = LoadModel.convert_to_health_metrics(
+                prediction, target_type, actual_target
+            )
 
+            # Combine sensor data with prediction
+            result = {
+                "row_index": current_index,
+                "timestamp": current_index * 10,
+                "prediction": {
+                    "health_percentage": float(metrics["health_percentage"]),
+                    "predicted_rul": float(metrics["predicted_rul"]),
+                    "health_status": metrics["health_status"],
+                    "severity": float(metrics["severity"]),
+                },
+                "sensor_data": sensor_data,
+                "metrics": metrics,
+            }
 
-# pprint.pprint(LoadModel.load_dataset(Config.DATASET_PATH))
-# pprint.pprint(LoadModel.load_model_components(Config.MODEL_PATH, Config.COMPONENTS_PATH))
-pprint.pprint(
-    LoadModel.run_single_prediction(
-        Config.DATASET_PATH, Config.MODEL_PATH, Config.COMPONENTS_PATH
-    )
-)
+            yield result
+
+            current_index += step_size
