@@ -1,0 +1,110 @@
+import { BarChart3, TrendingUp } from "lucide-react";
+import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import type { VibrationChartType } from "@/App";
+
+export const description = "A multiple line chart";
+
+type ChartConfig = {
+  vibration_x: {
+    label: "Vib_x";
+    color: string;
+  };
+  vibration_y: {
+    label: "Vib_y";
+    color: string;
+  };
+};
+
+type Props = {
+  vibrationData: VibrationChartType[];
+};
+
+const chartConfig = {
+  vibration_x: {
+    label: "Vib_x",
+    color: "var(--chart-1)",
+  },
+  vibration_y: {
+    label: "Vib_y",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
+export default function LiveVibrationGraph({ vibrationData }: Props) {
+  return (
+    <Card className="py-4 sm:py-0">
+      <CardHeader className="pb-6">
+        <CardTitle className="flex items-center gap-4 text-xl font-bold">
+          <div className="icon-container bg-gradient-to-br from-chart-3/20 to-chart-3/10">
+            <BarChart3 className="h-6 w-6 text-chart-3" />
+          </div>
+          Live Vibration Monitoring
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-2 sm:p-6">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <LineChart
+            accessibilityLayer
+            data={vibrationData}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="index"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              // tickFormatter={(value) => value.slice(0, 3)}
+            />
+
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  className="w-[150px]"
+                  nameKey="views"
+                  labelFormatter={(value) => {
+                    return new Date(value).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    });
+                  }}
+                />
+              }
+            />
+            <Line
+              dataKey="vibration_x"
+              type="monotone"
+              stroke="var(--color-vibration_x)"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              dataKey="vibration_y"
+              type="monotone"
+              stroke="var(--color-vibration_y)"
+              strokeWidth={2}
+              dot={false}
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+          </LineChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+}

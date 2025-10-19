@@ -1,8 +1,8 @@
 import pickle
-
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
+from datetime import datetime
 
 
 class LoadModel:
@@ -297,7 +297,7 @@ class LoadModel:
             # Combine sensor data with prediction
             result = {
                 "row_index": current_index,
-                "timestamp": current_index * 10,
+                "timestamp": datetime.now().isoformat(),
                 "prediction": {
                     "health_percentage": float(metrics["health_percentage"]),
                     "predicted_rul": float(metrics["predicted_rul"]),

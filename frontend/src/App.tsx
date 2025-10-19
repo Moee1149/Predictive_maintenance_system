@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,8 +12,26 @@ import { Activity, BarChart3, TrendingUp, Wrench, Brain } from "lucide-react";
 
 const SOCKET_URL = "http://127.0.0.1:5000";
 
+export type VibrationChartType = {
+  vibration_x: number;
+  vibration_y: number;
+  timestmap: string;
+  index: number;
+};
+
 export default function App() {
   const socketRef = useRef<Socket | null>(null);
+  const [vibrationChartData, setVibrationChartData] = useState<
+    Array<VibrationChartType>
+  >([
+    {
+      vibration_x: 0,
+      vibration_y: 0,
+      timestmap: "",
+      index: 0,
+    },
+  ]);
+
   useEffect(() => {
     function connectSocket() {
       socketRef.current = io(SOCKET_URL);
@@ -21,8 +39,37 @@ export default function App() {
         console.log("Connected to server");
       });
       socketRef.current.on("message", (data) => console.log(data));
+      socketRef.current.on("data", (data) => console.log(data));
     }
+
     connectSocket();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("message");
+        socketRef.current.off("data");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    socket.emit("start_simulation", { step_size: 20, delay: 1.0 });
+    socket.on("prediction_update", (data) => {
+      console.log(data);
+      const filterVibrationChartData: VibrationChartType = {
+        vibration_x: data?.sensor_data?.vibration_x_rms,
+        vibration_y: data?.sensor_data?.vibration_y_rms,
+        index: data?.row_index,
+        timestmap: data?.timestmap,
+      };
+      setVibrationChartData((prev) => [...prev, filterVibrationChartData]);
+    });
+    return () => {
+      socket.off("prediction_update");
+    };
   }, []);
 
   return (
@@ -78,7 +125,7 @@ export default function App() {
               value="monitoring"
               className="space-y-6 animate-in fade-in-50 duration-200"
             >
-              <RealTimeMonitoring />
+              <RealTimeMonitoring vibrationData={vibrationChartData} />
             </TabsContent>
 
             <TabsContent

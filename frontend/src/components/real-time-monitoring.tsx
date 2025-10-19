@@ -6,14 +6,15 @@ import {
   AlertTriangle,
   Activity,
   Thermometer,
-  Gauge,
-  BarChart3,
   TrendingUp,
   Zap,
   Heart,
+  LucideMoveVertical,
 } from "lucide-react";
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import LiveVibrationGraph from "./LiveVibrationGraph";
+import type { VibrationChartType } from "@/App";
 
 type HealthStatus = "healthy" | "degraded" | "warning" | "critical";
 
@@ -32,7 +33,11 @@ const getHealthColor = (status: string) => {
   }
 };
 
-export function RealTimeMonitoring() {
+type RealTimeMonitoringProps = {
+  vibrationData: VibrationChartType[];
+};
+
+export function RealTimeMonitoring({ vibrationData }: RealTimeMonitoringProps) {
   const currentHealth = 75;
   const rulHours = 42;
   const healthStatus: HealthStatus = "degraded";
@@ -191,27 +196,7 @@ export function RealTimeMonitoring() {
         </Card>
       </div>
 
-      <Card className="metric-card">
-        <CardHeader className="pb-6">
-          <CardTitle className="flex items-center gap-4 text-xl font-bold">
-            <div className="icon-container bg-gradient-to-br from-chart-3/20 to-chart-3/10">
-              <BarChart3 className="h-6 w-6 text-chart-3" />
-            </div>
-            Live Vibration Monitoring
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="chart-placeholder h-80 flex-col gap-4">
-            <BarChart3 className="h-16 w-16" />
-            <div className="text-center space-y-2">
-              <div className="text-xl font-bold">Live Vibration Chart</div>
-              <div className="text-base text-muted-foreground">
-                Real-time vibration data visualization
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <LiveVibrationGraph vibrationData={vibrationData} />
     </div>
   );
 }
