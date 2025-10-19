@@ -1,4 +1,4 @@
-import { BarChart3, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,13 +42,19 @@ const chartConfig = {
 export default function LiveVibrationGraph({ vibrationData }: Props) {
   return (
     <Card className="py-4 sm:py-0">
-      <CardHeader className="pb-6">
-        <CardTitle className="flex items-center gap-4 text-xl font-bold">
-          <div className="icon-container bg-gradient-to-br from-chart-3/20 to-chart-3/10">
-            <BarChart3 className="h-6 w-6 text-chart-3" />
+      <CardHeader className="p-5">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-semibold text-card-foreground">
+              Live Vibration Monitoring
+            </h2>
           </div>
-          Live Vibration Monitoring
-        </CardTitle>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+            <span className="text-sm text-muted-foreground">Live</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
         <ChartContainer

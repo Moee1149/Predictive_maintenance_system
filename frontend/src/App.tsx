@@ -7,7 +7,6 @@ import { ModelPerformance } from "@/components/model-perfomance";
 import { RealTimeMonitoring } from "@/components/real-time-monitoring";
 import { TrendsVisualization } from "@/components/trend-visualization";
 import { MaintenanceInsights } from "@/components/maintenance-insights";
-import { AdvancedAnalytics } from "@/components/advanced-analytics";
 import { Activity, BarChart3, TrendingUp, Wrench, Brain } from "lucide-react";
 
 const SOCKET_URL = "http://127.0.0.1:5000";
@@ -19,10 +18,18 @@ export type VibrationChartType = {
   index: number;
 };
 
+export type CurrentReadings = {
+  bearingTemperature: number;
+  atmosphericTemperature: number;
+  vibrationX: number;
+  vibrationY: number;
+  rms: number;
+};
+
 export default function App() {
   const socketRef = useRef<Socket | null>(null);
   const [vibrationChartData, setVibrationChartData] = useState<
-    Array<VibrationChartType>
+    VibrationChartType[]
   >([
     {
       vibration_x: 0,
@@ -31,6 +38,14 @@ export default function App() {
       index: 0,
     },
   ]);
+
+  const [currentReadings, setCurrentReadings] = useState<CurrentReadings>({
+    vibrationX: 0,
+    vibrationY: 0,
+    bearingTemperature: 0,
+    atmosphericTemperature: 0,
+    rms: 0,
+  });
 
   useEffect(() => {
     function connectSocket() {
@@ -66,6 +81,16 @@ export default function App() {
         timestmap: data?.timestmap,
       };
       setVibrationChartData((prev) => [...prev, filterVibrationChartData]);
+
+      //current readings
+      const currentReadings: CurrentReadings = {
+        bearingTemperature: data?.sensor_data.temperature_bearing_mean,
+        atmosphericTemperature: data?.sensor_data?.temperature_atmospheric_mean,
+        vibrationX: data?.sensor_data?.vibration_x_rms,
+        vibrationY: data?.sensor_data?.vibration_y_rms,
+        rms: data?.sensor_data?.combined_vib_rms,
+      };
+      setCurrentReadings(currentReadings);
     });
     return () => {
       socket.off("prediction_update");
@@ -77,7 +102,7 @@ export default function App() {
       <div className="mx-auto max-w-7xl p-8 space-y-10">
         <ProjectOverview />
         <Tabs defaultValue="monitoring" className="space-y-8">
-          <TabsList className="glass-tabs grid w-full grid-cols-5 p-2 h-auto gap-2">
+          <TabsList className="glass-tabs grid w-full grid-cols-4 p-2 h-auto gap-2">
             <TabsTrigger
               value="monitoring"
               className="tab-trigger flex items-center justify-center"
@@ -110,14 +135,6 @@ export default function App() {
               <span className="hidden sm:inline font-medium">Maintenance</span>
               <span className="sm:hidden font-medium">Maint</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="analytics"
-              className="tab-trigger flex items-center justify-center"
-            >
-              <Brain className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline font-medium">Analytics</span>
-              <span className="sm:hidden font-medium">AI</span>
-            </TabsTrigger>
           </TabsList>
 
           <div className="tab-content-container">
@@ -125,7 +142,10 @@ export default function App() {
               value="monitoring"
               className="space-y-6 animate-in fade-in-50 duration-200"
             >
-              <RealTimeMonitoring vibrationData={vibrationChartData} />
+              <RealTimeMonitoring
+                vibrationData={vibrationChartData}
+                currentReadings={currentReadings}
+              />
             </TabsContent>
 
             <TabsContent
@@ -147,13 +167,6 @@ export default function App() {
               className="space-y-6 animate-in fade-in-50 duration-200"
             >
               <MaintenanceInsights />
-            </TabsContent>
-
-            <TabsContent
-              value="analytics"
-              className="space-y-6 animate-in fade-in-50 duration-200"
-            >
-              <AdvancedAnalytics />
             </TabsContent>
           </div>
         </Tabs>
