@@ -21,8 +21,8 @@ const statusConfig = {
     label: "🟡 DEGRADING",
   },
   NEAR_FAILURE: {
-    color: "bg-[var(--color-chart-4)]",
-    text: "text-[var(--color-chart-4)]",
+    color: "bg-[var(--color-chart-1)]",
+    text: "text-[var(--color-chart-1)]",
     label: "🟠 NEAR FAILURE",
   },
   CRITICAL: {
@@ -71,7 +71,7 @@ export function HealthStatus({
                 className={`absolute inset-x-0 bottom-0 rounded-md transition-all duration-500 ${
                   healthPercentage > 60
                     ? "bg-[var(--color-success)]"
-                    : healthPercentage > 30
+                    : healthPercentage > 10
                       ? "bg-[var(--color-warning)]"
                       : "bg-[var(--color-danger)]"
                 }`}

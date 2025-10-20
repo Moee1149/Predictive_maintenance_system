@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Thermometer, Activity, Zap } from "lucide-react";
+import { Thermometer, Activity, Zap, AudioWaveform } from "lucide-react";
 
 interface CurrentReadingsProps {
   bearingTemperature: number;
@@ -10,17 +10,17 @@ interface CurrentReadingsProps {
 }
 
 function getTemperatureColor(temp: number): string {
-  if (temp < 70) return "text-[var(--color-success)]";
+  if (temp < 70) return "text-[var(--color-chart-2)]";
   if (temp < 80) return "text-[var(--color-warning)]";
   if (temp < 90) return "text-[var(--color-chart-4)]";
-  return "text-red-300";
+  return "text-[var(--color-destructive-foreground)]";
 }
 
 function getVibrationColor(vib: number): string {
-  if (vib < 0.5) return "text-[var(--color-success)]";
-  if (vib < 0.7) return "text-[var(--color-warning)]";
-  if (vib < 0.9) return "text-[var(--color-chart-4)]";
-  return "text-red-400";
+  if (vib < 0.5) return "text-[var(--color-chart-2)]";
+  if (vib < 2) return "text-[var(--color-warning)]";
+  if (vib < 4) return "text-[var(--color-chart-4)]";
+  return "text-[var(--color-destructive-foreground)]";
 }
 
 export function CurrentReadings({
@@ -49,7 +49,7 @@ export function CurrentReadings({
             <div
               className={`text-2xl font-bold tabular-nums ${getTemperatureColor(bearingTemperature)}`}
             >
-              {bearingTemperature?.toFixed(1)}°F
+              {bearingTemperature?.toFixed(1)} °C
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@ export function CurrentReadings({
             <div
               className={`text-2xl font-bold tabular-nums ${getTemperatureColor(atmosphericTemperature)}`}
             >
-              {atmosphericTemperature?.toFixed(1)}°F
+              {atmosphericTemperature?.toFixed(1)} °C
             </div>
           </div>
         </div>
@@ -84,8 +84,8 @@ export function CurrentReadings({
               className={`text-2xl font-bold tabular-nums ${getVibrationColor(rms)}`}
             >
               {rms?.toFixed(3)}
+              <span className="text-xs text-muted-foreground ml-2">g</span>
             </div>
-            <div className="text-xs text-muted-foreground">g</div>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ export function CurrentReadings({
           <div
             className={`rounded-full bg-secondary p-4 ${getVibrationColor(vibrationX)}`}
           >
-            <Zap className="h-8 w-8" />
+            <AudioWaveform className="h-8 w-8" />
           </div>
           <div className="flex-1 space-y-1">
             <div className="text-sm text-muted-foreground">Vibration X</div>
@@ -102,8 +102,8 @@ export function CurrentReadings({
               className={`text-2xl font-bold tabular-nums ${getVibrationColor(vibrationX)}`}
             >
               {vibrationX?.toFixed(3)}
+              <span className="text-xs text-muted-foreground ml-2">g</span>
             </div>
-            <div className="text-xs text-muted-foreground">g</div>
           </div>
         </div>
 
@@ -112,7 +112,7 @@ export function CurrentReadings({
           <div
             className={`rounded-full bg-secondary p-4 ${getVibrationColor(vibrationY)}`}
           >
-            <Zap className="h-8 w-8" />
+            <AudioWaveform className="h-8 w-8" />
           </div>
           <div className="flex-1 space-y-1">
             <div className="text-sm text-muted-foreground">Vibration Y</div>
@@ -120,7 +120,7 @@ export function CurrentReadings({
               className={`text-2xl font-bold tabular-nums ${getVibrationColor(vibrationY)}`}
             >
               {vibrationY?.toFixed(3)}
-              <span className="text-xs text-muted-foreground">g</span>
+              <span className="text-xs text-muted-foreground ml-2">g</span>
             </div>
           </div>
         </div>

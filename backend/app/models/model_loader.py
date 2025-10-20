@@ -202,7 +202,7 @@ class LoadModel:
         }
 
     @staticmethod
-    def get_row_with_sensor_data(dataset, row_index):
+    def get_row_with_sensor_data(dataset, row_index, scaler=None, feature_names=None):
         """
         Get a single row with all sensor data needed for frontend visualization
 
@@ -236,11 +236,73 @@ class LoadModel:
             "vibration_y_crest_factor": float(row_data["vibration_y_crest_factor"]),
         }
 
+        # Denormalize temperatures if scaler is provided
+        if scaler is not None and feature_names is not None:
+            sensor_data = LoadModel.denormalize_row_temperatures(
+                sensor_data, scaler, feature_names
+            )
         return sensor_data
 
     @staticmethod
+    def denormalize_row_temperatures(row_data, scaler, feature_names):
+        """
+        Denormalize all temperature values in a row
+
+        Args:
+            row_data: Dictionary containing sensor data with normalized temperatures
+            scaler: The scaler object used during training
+            feature_names: List of all feature names
+
+        Returns:
+            dict: Updated sensor data with denormalized temperatures
+        """
+        try:
+            # Create a full feature vector with zeros
+            feature_vector = np.zeros((1, len(feature_names)))
+
+            # Map the current row's features to the feature vector
+            for idx, name in enumerate(feature_names):
+                if name in ["temperature_bearing_mean", "temperature_atmospheric_mean"]:
+                    # Get the normalized value
+                    if name in row_data:
+                        feature_vector[0, idx] = row_data[name]
+
+            # Inverse transform the entire feature vector
+            denormalized_features = scaler.inverse_transform(feature_vector)[0]
+
+            # Extract the denormalized temperature values
+            for idx, name in enumerate(feature_names):
+                if name == "temperature_bearing_mean":
+                    row_data["temperature_bearing_mean"] = float(
+                        denormalized_features[idx]
+                    )
+                elif name == "temperature_atmospheric_mean":
+                    row_data["temperature_atmospheric_mean"] = float(
+                        denormalized_features[idx]
+                    )
+
+            print("   ✅ Denormalized temperatures:")
+            print(
+                f"      Bearing: {row_data.get('temperature_bearing_mean', 'N/A'):.2f}°C"
+            )
+            print(
+                f"      Atmospheric: {row_data.get('temperature_atmospheric_mean', 'N/A'):.2f}°C"
+            )
+
+        except Exception as e:
+            print(f"   ⚠️  Could not denormalize temperatures: {e}")
+            print("      Returning normalized values")
+
+        return row_data
+
+    @staticmethod
     def batch_predict_with_interval(
-        dataset_path, model_path, components_path, start_index=0, step_size=10
+        dataset_path,
+        model_path,
+        components_path,
+        start_index=0,
+        step_size=10,
+        step_config=None,
     ):
         """
         Generator function for batch predictions with intervals
@@ -262,6 +324,7 @@ class LoadModel:
         dataset = data_dict["dataset"]
         target_type = data_dict["target_type"]
         feature_names = data_dict["feature_names"]
+        scaler = data_dict["scaler"]
 
         model_dict = LoadModel.load_model_components(model_path, components_path)
         model = model_dict["model"]
@@ -272,11 +335,34 @@ class LoadModel:
 
         print(f"📊 Total rows: {total_rows}")
         print(f"📍 Starting from index: {start_index}")
-        print(f"⏭️  Step size: {step_size}\n")
+
+        if step_config:
+            print("⚙️  Variable step size configuration:")
+            for threshold, step in step_config:
+                print(f"      Rows 0-{threshold}: step size {step}")
+        else:
+            print(f"⏭️  Fixed step size: {step_size}\n")
+
+        # Helper function to get current step size based on row index
+        def get_current_step_size(index):
+            if step_config is None:
+                return step_size
+
+            for threshold, step in step_config:
+                if index < threshold:
+                    return step
+
+            # If we've passed all thresholds, use the last step size
+            return step_config[-1][1] if step_config else step_size
 
         while current_index < total_rows:
+            # Get current step size based on row index
+            current_step = get_current_step_size(current_index)
+
             # Get sensor data
-            sensor_data = LoadModel.get_row_with_sensor_data(dataset, current_index)
+            sensor_data = LoadModel.get_row_with_sensor_data(
+                dataset, current_index, scaler, feature_names
+            )
 
             # Get features for prediction
             row_dict = LoadModel.get_single_row(dataset, current_index)
@@ -306,8 +392,9 @@ class LoadModel:
                 },
                 "sensor_data": sensor_data,
                 "metrics": metrics,
+                "current_step": current_step,
             }
 
             yield result
 
-            current_index += step_size
+            current_index += current_step

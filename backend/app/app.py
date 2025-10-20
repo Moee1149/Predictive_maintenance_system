@@ -40,7 +40,7 @@ def convert_to_json_serializable(obj):
         return obj
 
 
-def run_simulation(step_size=10, delay=1.0):
+def run_simulation(step_size=10, delay=1.0, step_config=None):
     """
     Run the prediction simulation in a separate thread
 
@@ -59,6 +59,7 @@ def run_simulation(step_size=10, delay=1.0):
         Config.COMPONENTS_PATH,
         start_index=0,
         step_size=step_size,
+        step_config=step_config,
     )
 
     for result in prediction_generator:
@@ -70,8 +71,9 @@ def run_simulation(step_size=10, delay=1.0):
         # Emit the data to all connected clients
         socketio.emit("prediction_update", serialized_result)
         print(result)
-        print(f"📤 Sent data for row {result['row_index']}")
-
+        print(
+            f"📤 Sent data for row {result['row_index']} (step: {result.get('current_step_size', step_size)})"
+        )
         # Wait before sending next update
         time.sleep(delay)
 
@@ -99,8 +101,13 @@ def handle_start_simulation(data):
 
     Expected data format:
     {
-        "step_size": 10,  # Optional, default 10
-        "delay": 1.0      # Optional, default 1.0 seconds
+        "step_size": 10,           # Optional, default 10 (used if no step_config)
+        "delay": 1.0,              # Optional, default 1.0 seconds
+        "step_config": [           # Optional, for variable step sizes
+            [1500, 20],            # Use step 20 until row 1500
+            [1800, 5],             # Then step 5 until row 1800
+            [3000, 2]              # Then step 2 until row 3000
+        ]
     }
     """
     global simulation_running, simulation_thread
@@ -112,16 +119,32 @@ def handle_start_simulation(data):
     step_size = data.get("step_size", 10)
     delay = data.get("delay", 1.0)
 
+    # Get step configuration if provided
+    step_config_raw = data.get("step_config", None)
+    step_config = None
+
+    if step_config_raw:
+        # Convert list of lists to list of tuples
+        step_config = [
+            (int(threshold), int(step)) for threshold, step in step_config_raw
+        ]
+
     simulation_running = True
     simulation_thread = threading.Thread(
-        target=run_simulation, args=(step_size, delay), daemon=True
+        target=run_simulation, args=(step_size, delay, step_config), daemon=True
     )
     simulation_thread.start()
 
-    emit(
-        "simulation_started",
-        {"message": "Simulation started", "step_size": step_size, "delay": delay},
-    )
+    response_data = {
+        "message": "Simulation started",
+        "step_size": step_size,
+        "delay": delay,
+    }
+
+    if step_config:
+        response_data["step_config"] = step_config
+
+    emit("simulation_started", response_data)
 
 
 @socketio.on("stop_simulation")

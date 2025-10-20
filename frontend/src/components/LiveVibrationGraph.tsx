@@ -1,7 +1,7 @@
-import { Activity, BarChart3, TrendingUp } from "lucide-react";
+import { Activity } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,

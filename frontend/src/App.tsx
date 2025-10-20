@@ -7,7 +7,7 @@ import { ModelPerformance } from "@/components/model-perfomance";
 import { RealTimeMonitoring } from "@/components/real-time-monitoring";
 import { TrendsVisualization } from "@/components/trend-visualization";
 import { MaintenanceInsights } from "@/components/maintenance-insights";
-import { Activity, BarChart3, TrendingUp, Wrench, Brain } from "lucide-react";
+import { Activity, BarChart3, TrendingUp, Wrench } from "lucide-react";
 
 const SOCKET_URL = "http://127.0.0.1:5000";
 
@@ -26,8 +26,22 @@ export type CurrentReadings = {
   rms: number;
 };
 
+export type HealthStatus = {
+  healthPercentage?: number;
+  predictedRul?: number;
+  healthStatus?: "HEALTHY" | "DEGRADING" | "NEAR_FAILURE" | "CRITICAL";
+  severity?: number;
+};
+
 export default function App() {
   const socketRef = useRef<Socket | null>(null);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>({
+    healthPercentage: 0,
+    predictedRul: 0,
+    healthStatus: "HEALTHY",
+    severity: 0,
+  });
+
   const [vibrationChartData, setVibrationChartData] = useState<
     VibrationChartType[]
   >([
@@ -71,9 +85,27 @@ export default function App() {
     const socket = socketRef.current;
     if (!socket) return;
 
-    socket.emit("start_simulation", { step_size: 20, delay: 1.0 });
+    socket.emit("start_simulation", {
+      step_size: 20,
+      delay: 1.0,
+      step_config: [
+        [1500, 100],
+        [1700, 10],
+        [1800, 5],
+      ],
+    });
     socket.on("prediction_update", (data) => {
       console.log(data);
+
+      const healthStatus: HealthStatus = {
+        healthPercentage: data?.prediction.health_percentage,
+        predictedRul: data?.prediction?.predicted_rul,
+        healthStatus: data?.prediction?.health_status,
+        severity: data?.prediction?.severity,
+      };
+
+      setHealthStatus(healthStatus);
+
       const filterVibrationChartData: VibrationChartType = {
         vibration_x: data?.sensor_data?.vibration_x_rms,
         vibration_y: data?.sensor_data?.vibration_y_rms,
@@ -145,6 +177,7 @@ export default function App() {
               <RealTimeMonitoring
                 vibrationData={vibrationChartData}
                 currentReadings={currentReadings}
+                healthStatus={healthStatus}
               />
             </TabsContent>
 
