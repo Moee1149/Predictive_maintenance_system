@@ -1,2 +1,3 @@
 /frontend/node_modules
 .env
+model_evaluation_complete.json

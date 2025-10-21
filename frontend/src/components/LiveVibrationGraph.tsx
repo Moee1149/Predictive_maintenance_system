@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/chart";
 import type { VibrationChartType } from "@/App";
 
-export const description = "A multiple line chart";
-
 type ChartConfig = {
   vibration_x: {
     label: "Vib_x";
@@ -71,23 +69,33 @@ export default function LiveVibrationGraph({ vibrationData }: Props) {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="index"
+              dataKey="timestamp" // Use timestamp field (note the typo in your type)
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              // tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => {
+                // Format timestamp for X-axis display
+                const date = new Date(value);
+                return date.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                });
+              }}
             />
 
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   className="w-[150px]"
-                  nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    // Now value is the timestamp
+                    return new Date(value).toLocaleString("en-US", {
                       month: "short",
                       day: "numeric",
-                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
                     });
                   }}
                 />

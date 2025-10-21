@@ -34,7 +34,7 @@ const statusConfig = {
 
 function getBatteryColor(percentage: number): string {
   if (percentage > 60) return "text-[var(--color-success)]";
-  if (percentage > 30) return "text-[var(--color-warning)]";
+  if (percentage > 10) return "text-[var(--color-warning)]";
   return "text-[var(--color-danger)]";
 }
 
@@ -45,7 +45,6 @@ export function HealthStatus({
   severity = 2.3,
 }: HealthStatusProps) {
   const maxRul = 128;
-  const rulPercentage = (predictedRul / maxRul) * 100;
   const config = statusConfig[healthStatus];
 
   return (
@@ -104,7 +103,7 @@ export function HealthStatus({
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
               className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${rulPercentage}%` }}
+              style={{ width: `${healthPercentage}%` }}
             />
           </div>
         </div>

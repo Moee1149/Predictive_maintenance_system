@@ -3,18 +3,17 @@ import { io, Socket } from "socket.io-client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectOverview } from "@/components/project-overview";
-import { ModelPerformance } from "@/components/model-perfomance";
 import { RealTimeMonitoring } from "@/components/real-time-monitoring";
 import { TrendsVisualization } from "@/components/trend-visualization";
 import { MaintenanceInsights } from "@/components/maintenance-insights";
-import { Activity, BarChart3, TrendingUp, Wrench } from "lucide-react";
+import { Activity, TrendingUp, Wrench } from "lucide-react";
 
 const SOCKET_URL = "http://127.0.0.1:5000";
 
 export type VibrationChartType = {
   vibration_x: number;
   vibration_y: number;
-  timestmap: string;
+  timestamp: string;
   index: number;
 };
 
@@ -33,6 +32,15 @@ export type HealthStatus = {
   severity?: number;
 };
 
+export type PredcitionHistory = {
+  timestamp: string;
+  vibrationRMS: number;
+  bearingTemp: number;
+  healthPercent: number;
+  healthState: "HEALTHY" | "DEGRADING" | "NEAR_FAILURE" | "CRITICAL";
+  rul: number;
+};
+
 export default function App() {
   const socketRef = useRef<Socket | null>(null);
   const [healthStatus, setHealthStatus] = useState<HealthStatus>({
@@ -48,7 +56,7 @@ export default function App() {
     {
       vibration_x: 0,
       vibration_y: 0,
-      timestmap: "",
+      timestamp: "",
       index: 0,
     },
   ]);
@@ -60,6 +68,10 @@ export default function App() {
     atmosphericTemperature: 0,
     rms: 0,
   });
+
+  const [predictionHistory, setPredictionHistory] = useState<
+    PredcitionHistory[]
+  >([]);
 
   useEffect(() => {
     function connectSocket() {
@@ -89,7 +101,9 @@ export default function App() {
       step_size: 20,
       delay: 1.0,
       step_config: [
-        [1500, 100],
+        [1000, 100],
+        [1200, 20],
+        [1500, 15],
         [1700, 10],
         [1800, 5],
       ],
@@ -110,7 +124,7 @@ export default function App() {
         vibration_x: data?.sensor_data?.vibration_x_rms,
         vibration_y: data?.sensor_data?.vibration_y_rms,
         index: data?.row_index,
-        timestmap: data?.timestmap,
+        timestamp: data?.timestamp,
       };
       setVibrationChartData((prev) => [...prev, filterVibrationChartData]);
 
@@ -123,6 +137,29 @@ export default function App() {
         rms: data?.sensor_data?.combined_vib_rms,
       };
       setCurrentReadings(currentReadings);
+
+      const timestamp = data?.timestamp;
+      const date = new Date(timestamp);
+
+      // Manual formatting
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 0-indexed
+      const day = date.getDate();
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const seconds = date.getSeconds();
+
+      const formatted = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")} ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+      const predictionHistory: PredcitionHistory = {
+        timestamp: formatted,
+        vibrationRMS: data?.sensor_data?.combined_vib_rms?.toFixed(2),
+        bearingTemp: data?.sensor_data.temperature_bearing_mean?.toFixed(2),
+        healthPercent: data?.prediction.health_percentage?.toFixed(2),
+        rul: data?.prediction?.predicted_rul?.toFixed(2),
+        healthState: data?.prediction?.health_status,
+      };
+      setPredictionHistory((prev) => [...prev, predictionHistory]);
     });
     return () => {
       socket.off("prediction_update");
@@ -134,7 +171,7 @@ export default function App() {
       <div className="mx-auto max-w-7xl p-8 space-y-10">
         <ProjectOverview />
         <Tabs defaultValue="monitoring" className="space-y-8">
-          <TabsList className="glass-tabs grid w-full grid-cols-4 p-2 h-auto gap-2">
+          <TabsList className="glass-tabs grid w-full grid-cols-2 p-2 h-auto gap-2">
             <TabsTrigger
               value="monitoring"
               className="tab-trigger flex items-center justify-center"
@@ -144,28 +181,12 @@ export default function App() {
               <span className="sm:hidden font-medium">Live</span>
             </TabsTrigger>
             <TabsTrigger
-              value="performance"
-              className="tab-trigger flex items-center justify-center"
-            >
-              <BarChart3 className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline font-medium">Performance</span>
-              <span className="sm:hidden font-medium">Perf</span>
-            </TabsTrigger>
-            <TabsTrigger
               value="trends"
               className="tab-trigger flex items-center justify-center"
             >
               <TrendingUp className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="hidden sm:inline font-medium">Trends</span>
               <span className="sm:hidden font-medium">Trends</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="maintenance"
-              className="tab-trigger flex items-center justify-center"
-            >
-              <Wrench className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline font-medium">Maintenance</span>
-              <span className="sm:hidden font-medium">Maint</span>
             </TabsTrigger>
           </TabsList>
 
@@ -179,13 +200,7 @@ export default function App() {
                 currentReadings={currentReadings}
                 healthStatus={healthStatus}
               />
-            </TabsContent>
-
-            <TabsContent
-              value="performance"
-              className="space-y-6 animate-in fade-in-50 duration-200"
-            >
-              <ModelPerformance />
+              <MaintenanceInsights predictionHistory={predictionHistory} />
             </TabsContent>
 
             <TabsContent
@@ -193,13 +208,6 @@ export default function App() {
               className="space-y-6 animate-in fade-in-50 duration-200"
             >
               <TrendsVisualization />
-            </TabsContent>
-
-            <TabsContent
-              value="maintenance"
-              className="space-y-6 animate-in fade-in-50 duration-200"
-            >
-              <MaintenanceInsights />
             </TabsContent>
           </div>
         </Tabs>

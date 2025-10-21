@@ -10,16 +10,16 @@ interface CurrentReadingsProps {
 }
 
 function getTemperatureColor(temp: number): string {
-  if (temp < 70) return "text-[var(--color-chart-2)]";
+  if (temp < 46) return "text-[var(--color-chart-2)]";
   if (temp < 80) return "text-[var(--color-warning)]";
   if (temp < 90) return "text-[var(--color-chart-4)]";
   return "text-[var(--color-destructive-foreground)]";
 }
 
 function getVibrationColor(vib: number): string {
-  if (vib < 0.5) return "text-[var(--color-chart-2)]";
-  if (vib < 2) return "text-[var(--color-warning)]";
-  if (vib < 4) return "text-[var(--color-chart-4)]";
+  if (Math.abs(vib) < 0.4) return "text-[var(--color-chart-2)]";
+  if (Math.abs(vib) < 1.5) return "text-[var(--color-warning)]";
+  if (Math.abs(vib) < 4) return "text-[var(--color-chart-4)]";
   return "text-[var(--color-destructive-foreground)]";
 }
 
