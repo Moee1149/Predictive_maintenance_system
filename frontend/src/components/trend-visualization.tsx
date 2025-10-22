@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Line,
   XAxis,
@@ -8,12 +8,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Area,
   ComposedChart,
   Bar,
   ReferenceLine,
-} from "recharts"
-import { TrendingUp, TrendingDown, Activity, Thermometer } from "lucide-react"
+} from "recharts";
+import { TrendingUp, Activity, Thermometer } from "lucide-react";
+import { DegradationCurve } from "./degradationChart";
+import type { TrendAnaylsisDataType } from "@/App";
 
 // Mock historical data
 const vibrationTrendData = [
@@ -30,7 +31,7 @@ const vibrationTrendData = [
   { hour: 100, vibrationRMS: 0.39, healthPercent: 60, peakDetection: 4 },
   { hour: 110, vibrationRMS: 0.42, healthPercent: 55, peakDetection: 6 },
   { hour: 120, vibrationRMS: 0.45, healthPercent: 50, peakDetection: 5 },
-]
+];
 
 const temperatureTrendData = [
   { hour: 0, bearingTemp: 45.2, atmosphericTemp: 22.1, healthState: 0 },
@@ -46,33 +47,35 @@ const temperatureTrendData = [
   { hour: 100, bearingTemp: 67.8, atmosphericTemp: 22.3, healthState: 2 },
   { hour: 110, bearingTemp: 70.9, atmosphericTemp: 22.0, healthState: 3 },
   { hour: 120, bearingTemp: 74.2, atmosphericTemp: 22.2, healthState: 3 },
-]
+];
 
-const degradationCurveData = [
-  { hour: 0, actualHealth: 100, predictedHealth: 100, actualRUL: 164, predictedRUL: 164 },
-  { hour: 20, actualHealth: 95, predictedHealth: 96, actualRUL: 144, predictedRUL: 142 },
-  { hour: 40, actualHealth: 88, predictedHealth: 90, actualRUL: 124, predictedRUL: 126 },
-  { hour: 60, actualHealth: 80, predictedHealth: 82, actualRUL: 104, predictedRUL: 102 },
-  { hour: 80, actualHealth: 70, predictedHealth: 72, actualRUL: 84, predictedRUL: 86 },
-  { hour: 100, actualHealth: 60, predictedHealth: 58, actualRUL: 64, predictedRUL: 66 },
-  { hour: 120, actualHealth: 50, predictedHealth: 52, actualRUL: 44, predictedRUL: 42 },
-]
+type Props = {
+  trends: TrendAnaylsisDataType[];
+};
 
-export function TrendsVisualization() {
+export function TrendsVisualization({ trends }: Props) {
   const getHealthStateColor = (state: number) => {
     switch (state) {
       case 0:
-        return "rgba(34, 197, 94, 0.2)" // Healthy - green
+        return "rgba(34, 197, 94, 0.2)"; // Healthy - green
       case 1:
-        return "rgba(251, 191, 36, 0.2)" // Degraded - yellow
+        return "rgba(251, 191, 36, 0.2)"; // Degraded - yellow
       case 2:
-        return "rgba(249, 115, 22, 0.2)" // Near Failure - orange
+        return "rgba(249, 115, 22, 0.2)"; // Near Failure - orange
       case 3:
-        return "rgba(239, 68, 68, 0.2)" // Failure - red
+        return "rgba(239, 68, 68, 0.2)"; // Failure - red
       default:
-        return "rgba(113, 113, 122, 0.2)"
+        return "rgba(113, 113, 122, 0.2)";
     }
-  }
+  };
+
+  const degradationChartData = trends.map(
+    ({ hour, predictedHealth, predictedRUL }) => ({
+      hour,
+      predictedHealth,
+      predictedRUL,
+    }),
+  );
 
   return (
     <div className="space-y-6">
@@ -92,32 +95,48 @@ export function TrendsVisualization() {
                 Vibration RMS & Health Correlation
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Combined vibration RMS with health percentage overlay and anomaly peaks
+                Combined vibration RMS with health percentage overlay and
+                anomaly peaks
               </p>
             </CardHeader>
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={vibrationTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgb(39, 39, 42)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgb(39, 39, 42)"
+                    />
                     <XAxis
                       dataKey="hour"
                       stroke="rgb(113, 113, 122)"
                       fontSize={12}
-                      label={{ value: "Operating Hours", position: "insideBottom", offset: -5 }}
+                      label={{
+                        value: "Operating Hours",
+                        position: "insideBottom",
+                        offset: -5,
+                      }}
                     />
                     <YAxis
                       yAxisId="vibration"
                       stroke="rgb(113, 113, 122)"
                       fontSize={12}
-                      label={{ value: "Vibration RMS (g)", angle: -90, position: "insideLeft" }}
+                      label={{
+                        value: "Vibration RMS (g)",
+                        angle: -90,
+                        position: "insideLeft",
+                      }}
                     />
                     <YAxis
                       yAxisId="health"
                       orientation="right"
                       stroke="rgb(113, 113, 122)"
                       fontSize={12}
-                      label={{ value: "Health %", angle: 90, position: "insideRight" }}
+                      label={{
+                        value: "Health %",
+                        angle: 90,
+                        position: "insideRight",
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -159,12 +178,17 @@ export function TrendsVisualization() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Current RMS</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Current RMS
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-blue-400">0.45g</div>
-                  <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
+                  <Badge
+                    variant="outline"
+                    className="bg-red-500/10 text-red-400 border-red-500/20"
+                  >
                     <TrendingUp className="w-3 h-3 mr-1" />
                     +15%
                   </Badge>
@@ -174,12 +198,17 @@ export function TrendsVisualization() {
 
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Peak Count (24h)</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Peak Count (24h)
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-orange-400">23</div>
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
+                  <Badge
+                    variant="outline"
+                    className="bg-orange-500/10 text-orange-400 border-orange-500/20"
+                  >
                     High
                   </Badge>
                 </div>
@@ -188,11 +217,15 @@ export function TrendsVisualization() {
 
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Trend Direction</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Trend Direction
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-red-400">Increasing</div>
+                  <div className="text-2xl font-bold text-red-400">
+                    Increasing
+                  </div>
                   <TrendingUp className="w-5 h-5 text-red-400" />
                 </div>
               </CardContent>
@@ -216,17 +249,28 @@ export function TrendsVisualization() {
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={temperatureTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgb(39, 39, 42)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgb(39, 39, 42)"
+                    />
                     <XAxis
                       dataKey="hour"
                       stroke="rgb(113, 113, 122)"
                       fontSize={12}
-                      label={{ value: "Operating Hours", position: "insideBottom", offset: -5 }}
+                      label={{
+                        value: "Operating Hours",
+                        position: "insideBottom",
+                        offset: -5,
+                      }}
                     />
                     <YAxis
                       stroke="rgb(113, 113, 122)"
                       fontSize={12}
-                      label={{ value: "Temperature (°C)", angle: -90, position: "insideLeft" }}
+                      label={{
+                        value: "Temperature (°C)",
+                        angle: -90,
+                        position: "insideLeft",
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -237,7 +281,11 @@ export function TrendsVisualization() {
                     />
                     {/* Background shading for health states */}
                     {temperatureTrendData.map((point, index) => (
-                      <ReferenceLine key={index} x={point.hour} stroke="transparent" />
+                      <ReferenceLine
+                        key={index}
+                        x={point.hour}
+                        stroke="transparent"
+                      />
                     ))}
                     <Line
                       type="monotone"
@@ -263,12 +311,19 @@ export function TrendsVisualization() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Current Bearing Temp</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Current Bearing Temp
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-orange-400">74.2°C</div>
-                  <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
+                  <div className="text-2xl font-bold text-orange-400">
+                    74.2°C
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="bg-red-500/10 text-red-400 border-red-500/20"
+                  >
                     Critical
                   </Badge>
                 </div>
@@ -277,12 +332,17 @@ export function TrendsVisualization() {
 
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Temperature Rise</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Temperature Rise
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-red-400">+29°C</div>
-                  <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
+                  <Badge
+                    variant="outline"
+                    className="bg-red-500/10 text-red-400 border-red-500/20"
+                  >
                     <TrendingUp className="w-3 h-3 mr-1" />
                     64% increase
                   </Badge>
@@ -292,12 +352,17 @@ export function TrendsVisualization() {
 
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Ambient Temp</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Ambient Temp
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-blue-400">22.2°C</div>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-500/10 text-green-400 border-green-500/20"
+                  >
                     Stable
                   </Badge>
                 </div>
@@ -307,133 +372,9 @@ export function TrendsVisualization() {
         </TabsContent>
 
         <TabsContent value="degradation" className="space-y-6">
-          {/* Degradation Curve */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle>Health Degradation & RUL Prediction</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Actual vs predicted health percentage and remaining useful life over time
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={degradationCurveData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgb(39, 39, 42)" />
-                    <XAxis
-                      dataKey="hour"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{ value: "Operating Hours", position: "insideBottom", offset: -5 }}
-                    />
-                    <YAxis
-                      yAxisId="health"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{ value: "Health %", angle: -90, position: "insideLeft" }}
-                    />
-                    <YAxis
-                      yAxisId="rul"
-                      orientation="right"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{ value: "RUL (hours)", angle: 90, position: "insideRight" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "rgb(15, 15, 20)",
-                        border: "1px solid rgb(39, 39, 42)",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Area
-                      yAxisId="health"
-                      type="monotone"
-                      dataKey="actualHealth"
-                      stroke="rgb(34, 197, 94)"
-                      fill="rgba(34, 197, 94, 0.1)"
-                      strokeWidth={2}
-                      name="Actual Health %"
-                    />
-                    <Line
-                      yAxisId="health"
-                      type="monotone"
-                      dataKey="predictedHealth"
-                      stroke="rgb(59, 130, 246)"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name="Predicted Health %"
-                    />
-                    <Line
-                      yAxisId="rul"
-                      type="monotone"
-                      dataKey="actualRUL"
-                      stroke="rgb(249, 115, 22)"
-                      strokeWidth={2}
-                      name="Actual RUL"
-                    />
-                    <Line
-                      yAxisId="rul"
-                      type="monotone"
-                      dataKey="predictedRUL"
-                      stroke="rgb(139, 92, 246)"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name="Predicted RUL"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Degradation Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Health Decline Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-red-400">0.42%/hr</div>
-                  <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
-                    <TrendingDown className="w-3 h-3 mr-1" />
-                    Accelerating
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Prediction Accuracy</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-green-400">94.2%</div>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
-                    Excellent
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Time to Failure</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-orange-400">42 hrs</div>
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
-                    Critical
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <DegradationCurve degradationCurveChartData={degradationChartData} />
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

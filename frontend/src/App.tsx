@@ -6,7 +6,7 @@ import { ProjectOverview } from "@/components/project-overview";
 import { RealTimeMonitoring } from "@/components/real-time-monitoring";
 import { TrendsVisualization } from "@/components/trend-visualization";
 import { MaintenanceInsights } from "@/components/maintenance-insights";
-import { Activity, TrendingUp, Wrench } from "lucide-react";
+import { Activity, TrendingUp } from "lucide-react";
 
 const SOCKET_URL = "http://127.0.0.1:5000";
 
@@ -41,6 +41,22 @@ export type PredcitionHistory = {
   rul: number;
 };
 
+export type DegradationCurveDataType = {
+  hour: string;
+  predictedHealth: number;
+  predictedRUL: number;
+};
+
+export type TrendAnaylsisDataType = {
+  hour: string;
+  predictedHealth: number;
+  predictedRUL: number;
+  temp_bearing: number;
+  atmosphericTemperature: number;
+  vibrationX_rms: number;
+  vibrationY_rms: number;
+};
+
 export default function App() {
   const socketRef = useRef<Socket | null>(null);
   const [healthStatus, setHealthStatus] = useState<HealthStatus>({
@@ -72,6 +88,8 @@ export default function App() {
   const [predictionHistory, setPredictionHistory] = useState<
     PredcitionHistory[]
   >([]);
+
+  const [trends, setTrends] = useState<TrendAnaylsisDataType[]>([]);
 
   useEffect(() => {
     function connectSocket() {
@@ -160,7 +178,21 @@ export default function App() {
         healthState: data?.prediction?.health_status,
       };
       setPredictionHistory((prev) => [...prev, predictionHistory]);
+
+      const trendsData: TrendAnaylsisDataType = {
+        hour: formatted,
+        predictedHealth: data?.prediction?.health_percentage,
+        predictedRUL: data?.metrics?.predicted_rul,
+        temp_bearing: data?.sensor_data.temperature_bearing_mean?.toFixed(2),
+        atmosphericTemperature:
+          data?.sensor_data.temperature_atmospheric_mean?.toFixed(2),
+        vibrationX_rms: data?.sensor_data?.vibration_x_rms?.toFixed(2),
+        vibrationY_rms: data?.sensor_data?.vibration_x_rms?.toFixed(2),
+      };
+
+      setTrends((prev) => [...prev, trendsData]);
     });
+
     return () => {
       socket.off("prediction_update");
     };
@@ -207,7 +239,7 @@ export default function App() {
               value="trends"
               className="space-y-6 animate-in fade-in-50 duration-200"
             >
-              <TrendsVisualization />
+              <TrendsVisualization trends={trends} />
             </TabsContent>
           </div>
         </Tabs>
