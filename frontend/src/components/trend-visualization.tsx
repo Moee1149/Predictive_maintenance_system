@@ -1,6 +1,9 @@
+import { TrendingUp, Thermometer } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Line,
   XAxis,
@@ -9,29 +12,13 @@ import {
   Tooltip,
   ResponsiveContainer,
   ComposedChart,
-  Bar,
   ReferenceLine,
 } from "recharts";
-import { TrendingUp, Activity, Thermometer } from "lucide-react";
-import { DegradationCurve } from "./degradationChart";
-import type { TrendAnaylsisDataType } from "@/App";
 
-// Mock historical data
-const vibrationTrendData = [
-  { hour: 0, vibrationRMS: 0.12, healthPercent: 100, peakDetection: 0 },
-  { hour: 10, vibrationRMS: 0.14, healthPercent: 98, peakDetection: 1 },
-  { hour: 20, vibrationRMS: 0.16, healthPercent: 95, peakDetection: 0 },
-  { hour: 30, vibrationRMS: 0.18, healthPercent: 92, peakDetection: 2 },
-  { hour: 40, vibrationRMS: 0.21, healthPercent: 88, peakDetection: 1 },
-  { hour: 50, vibrationRMS: 0.24, healthPercent: 84, peakDetection: 3 },
-  { hour: 60, vibrationRMS: 0.27, healthPercent: 80, peakDetection: 2 },
-  { hour: 70, vibrationRMS: 0.3, healthPercent: 75, peakDetection: 4 },
-  { hour: 80, vibrationRMS: 0.33, healthPercent: 70, peakDetection: 3 },
-  { hour: 90, vibrationRMS: 0.36, healthPercent: 65, peakDetection: 5 },
-  { hour: 100, vibrationRMS: 0.39, healthPercent: 60, peakDetection: 4 },
-  { hour: 110, vibrationRMS: 0.42, healthPercent: 55, peakDetection: 6 },
-  { hour: 120, vibrationRMS: 0.45, healthPercent: 50, peakDetection: 5 },
-];
+import VibrationTrend from "./vibrationTrend";
+import { DegradationCurve } from "./degradationChart";
+
+import type { TrendAnaylsisDataType } from "@/App";
 
 const temperatureTrendData = [
   { hour: 0, bearingTemp: 45.2, atmosphericTemp: 22.1, healthState: 0 },
@@ -54,21 +41,6 @@ type Props = {
 };
 
 export function TrendsVisualization({ trends }: Props) {
-  const getHealthStateColor = (state: number) => {
-    switch (state) {
-      case 0:
-        return "rgba(34, 197, 94, 0.2)"; // Healthy - green
-      case 1:
-        return "rgba(251, 191, 36, 0.2)"; // Degraded - yellow
-      case 2:
-        return "rgba(249, 115, 22, 0.2)"; // Near Failure - orange
-      case 3:
-        return "rgba(239, 68, 68, 0.2)"; // Failure - red
-      default:
-        return "rgba(113, 113, 122, 0.2)";
-    }
-  };
-
   const degradationChartData = trends.map(
     ({ hour, predictedHealth, predictedRUL }) => ({
       hour,
@@ -76,6 +48,16 @@ export function TrendsVisualization({ trends }: Props) {
       predictedRUL,
     }),
   );
+
+  const vibrationTrendData = trends.map((t) => {
+    const {
+      peakDetection,
+      combined_rms: vibrationRMS,
+      predictedHealth: healthPercent,
+      hour,
+    } = t;
+    return { peakDetection, vibrationRMS, healthPercent, hour };
+  });
 
   return (
     <div className="space-y-6">
@@ -88,92 +70,7 @@ export function TrendsVisualization({ trends }: Props) {
 
         <TabsContent value="vibration" className="space-y-6">
           {/* Vibration Trends */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Vibration RMS & Health Correlation
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Combined vibration RMS with health percentage overlay and
-                anomaly peaks
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={vibrationTrendData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="rgb(39, 39, 42)"
-                    />
-                    <XAxis
-                      dataKey="hour"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{
-                        value: "Operating Hours",
-                        position: "insideBottom",
-                        offset: -5,
-                      }}
-                    />
-                    <YAxis
-                      yAxisId="vibration"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{
-                        value: "Vibration RMS (g)",
-                        angle: -90,
-                        position: "insideLeft",
-                      }}
-                    />
-                    <YAxis
-                      yAxisId="health"
-                      orientation="right"
-                      stroke="rgb(113, 113, 122)"
-                      fontSize={12}
-                      label={{
-                        value: "Health %",
-                        angle: 90,
-                        position: "insideRight",
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "rgb(15, 15, 20)",
-                        border: "1px solid rgb(39, 39, 42)",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Line
-                      yAxisId="vibration"
-                      type="monotone"
-                      dataKey="vibrationRMS"
-                      stroke="rgb(59, 130, 246)"
-                      strokeWidth={2}
-                      name="Vibration RMS"
-                    />
-                    <Line
-                      yAxisId="health"
-                      type="monotone"
-                      dataKey="healthPercent"
-                      stroke="rgb(34, 197, 94)"
-                      strokeWidth={2}
-                      name="Health %"
-                    />
-                    <Bar
-                      yAxisId="vibration"
-                      dataKey="peakDetection"
-                      fill="rgb(239, 68, 68)"
-                      opacity={0.6}
-                      name="Anomaly Peaks"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
+          <VibrationTrend vibrationTrendData={vibrationTrendData} />
           {/* Vibration Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="bg-card border-border">

@@ -55,6 +55,8 @@ export type TrendAnaylsisDataType = {
   atmosphericTemperature: number;
   vibrationX_rms: number;
   vibrationY_rms: number;
+  peakDetection: number;
+  combined_rms: number;
 };
 
 export default function App() {
@@ -188,6 +190,8 @@ export default function App() {
           data?.sensor_data.temperature_atmospheric_mean?.toFixed(2),
         vibrationX_rms: data?.sensor_data?.vibration_x_rms?.toFixed(2),
         vibrationY_rms: data?.sensor_data?.vibration_x_rms?.toFixed(2),
+        combined_rms: Math.abs(data?.sensor_data?.combined_vib_rms),
+        peakDetection: data?.sensor_data?.vibration_y_peak,
       };
 
       setTrends((prev) => [...prev, trendsData]);
