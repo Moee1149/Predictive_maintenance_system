@@ -1,7 +1,4 @@
 venv/
 __pycache__
-model_components_20250926_023409.pkl
 model_results.json
-trained_model_20250926_023409.keras
-train_val_test_split_20250924_035736.pkl
 app/test.py
