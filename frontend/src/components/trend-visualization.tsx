@@ -41,6 +41,11 @@ export function TrendsVisualization({ trends }: Props) {
     }),
   );
 
+  const initialTemp = trends[0]["temp_bearing"];
+  const finalTemp = trends[trends.length - 1]["temp_bearing"];
+  const tempIncrease = (finalTemp - initialTemp).toFixed(2);
+  const percentIncrease = ((tempIncrease / initialTemp) * 100).toFixed(1);
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="vibration" className="space-y-6">
@@ -63,14 +68,9 @@ export function TrendsVisualization({ trends }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-blue-400">0.45g</div>
-                  <Badge
-                    variant="outline"
-                    className="bg-red-500/10 text-red-400 border-red-500/20"
-                  >
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +15%
-                  </Badge>
+                  <div className="text-2xl font-bold text-blue-400">
+                    {trends[trends.length - 1]["combined_rms"].toFixed(2)} g
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -83,13 +83,9 @@ export function TrendsVisualization({ trends }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-orange-400">23</div>
-                  <Badge
-                    variant="outline"
-                    className="bg-orange-500/10 text-orange-400 border-orange-500/20"
-                  >
-                    High
-                  </Badge>
+                  <div className="text-2xl font-bold text-orange-400">
+                    {trends[trends.length - 1]["peakDetection"].toFixed(2)} g
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -127,14 +123,8 @@ export function TrendsVisualization({ trends }: Props) {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-orange-400">
-                    74.2°C
+                    {trends[trends.length - 1]["temp_bearing"]} °C
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="bg-red-500/10 text-red-400 border-red-500/20"
-                  >
-                    Critical
-                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -147,13 +137,15 @@ export function TrendsVisualization({ trends }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-red-400">+29°C</div>
+                  <div className="text-2xl font-bold text-red-400">
+                    +{tempIncrease} °C
+                  </div>
                   <Badge
                     variant="outline"
                     className="bg-red-500/10 text-red-400 border-red-500/20"
                   >
                     <TrendingUp className="w-3 h-3 mr-1" />
-                    64% increase
+                    {percentIncrease}% increase
                   </Badge>
                 </div>
               </CardContent>
@@ -162,18 +154,14 @@ export function TrendsVisualization({ trends }: Props) {
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Ambient Temp
+                  Atmospheric Temp
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold text-blue-400">22.2°C</div>
-                  <Badge
-                    variant="outline"
-                    className="bg-green-500/10 text-green-400 border-green-500/20"
-                  >
-                    Stable
-                  </Badge>
+                  <div className="text-2xl font-bold text-blue-400">
+                    {trends[trends.length - 1]["atmosphericTemperature"]} °C
+                  </div>
                 </div>
               </CardContent>
             </Card>

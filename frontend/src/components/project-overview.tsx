@@ -1,16 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Activity, Settings, Zap, Clock, Cpu } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Activity, Settings, Zap, Clock, Cpu } from "lucide-react";
 
 export function ProjectOverview() {
   return (
     <div className="space-y-10">
       <div className="flex items-start justify-between">
         <div className="space-y-4">
-          <h1 className="text-5xl font-bold text-balance gradient-text leading-tight">Bearing Health Monitoring</h1>
-          <h2 className="text-2xl font-medium text-muted-foreground/80">RUL Prediction System</h2>
+          <h1 className="text-5xl font-bold text-balance gradient-text leading-tight">
+            Bearing Health Monitoring
+          </h1>
+          <h2 className="text-2xl font-medium text-muted-foreground/80">
+            RUL Prediction System
+          </h2>
           <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
-            Real-time predictive maintenance for NSK 6205 Ball Bearing with advanced analytics and health monitoring
+            Real-time predictive maintenance for NSK 6205 Ball Bearing with
+            advanced analytics and health monitoring
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -37,7 +42,9 @@ export function ProjectOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-4xl font-bold gradient-text">NSK 6205</div>
-            <p className="text-sm text-muted-foreground font-medium">Ball Bearing</p>
+            <p className="text-sm text-muted-foreground font-medium">
+              Ball Bearing
+            </p>
           </CardContent>
         </Card>
 
@@ -52,9 +59,14 @@ export function ProjectOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-4xl font-bold text-chart-1">
-              1775 <span className="text-xl text-muted-foreground font-medium">RPM</span>
+              1775{" "}
+              <span className="text-xl text-muted-foreground font-medium">
+                RPM
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium">1770-1780 Range</p>
+            <p className="text-sm text-muted-foreground font-medium">
+              1770-1780 Range
+            </p>
           </CardContent>
         </Card>
 
@@ -69,9 +81,14 @@ export function ProjectOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-4xl font-bold text-chart-2">
-              5.88 <span className="text-xl text-muted-foreground font-medium">kN</span>
+              5.88{" "}
+              <span className="text-xl text-muted-foreground font-medium">
+                kN
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium">Vertical: 5.88kN, Axial: 2.94kN</p>
+            <p className="text-sm text-muted-foreground font-medium">
+              Vertical: 5.88kN, Axial: 2.94kN
+            </p>
           </CardContent>
         </Card>
 
@@ -86,12 +103,17 @@ export function ProjectOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-4xl font-bold text-chart-3">
-              164 <span className="text-xl text-muted-foreground font-medium">hrs</span>
+              128{" "}
+              <span className="text-xl text-muted-foreground font-medium">
+                hrs
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium">Start → Failure</p>
+            <p className="text-sm text-muted-foreground font-medium">
+              Start → Failure
+            </p>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
